@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y \
     nginx \
     supervisor
 
+    # Install Node.js 22
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs
+
 # Install PHP extensions
 RUN docker-php-ext-install \
     pdo \
@@ -33,6 +37,12 @@ WORKDIR /var/www
 
 # Copy application files
 COPY . .
+
+# Install frontend dependencies
+RUN npm install
+
+# Build Vite assets
+RUN npm run build
 
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader

@@ -1,8 +1,4 @@
 #!/bin/sh
-echo "ESTART"
-echo "ENE PE EME"
-npm install
-npm run build
 echo "EL ARTISANO"
 php artisan config:clear
 php artisan cache:clear
