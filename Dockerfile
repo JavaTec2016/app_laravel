@@ -1,43 +1,53 @@
-FROM php:8.2-fpm AS base
+# Use PHP with FPM
+FROM php:8.3-fpm
 
-# Install system dependencies & PHP extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    nginx \
     git \
     curl \
+    zip \
+    unzip \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    libpq-dev \
-    zip unzip \
-  && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libzip-dev \
+    nginx \
+    supervisor
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /var/www
 
-# Copy app and install dependencies at BUILD time
+# Copy application files
 COPY . .
-RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-  && chmod -R 755 /var/www/html/storage \
-  && chmod -R 755 /var/www/html/bootstrap/cache
+# Install Laravel dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Cache at build time (requires APP_KEY etc — skip if you don't have them at build time)
-# RUN php artisan config:cache
-# RUN php artisan route:cache
-# RUN php artisan view:cache
+# Laravel permissions
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Nginx config
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+# Copy nginx config
+COPY conf/nginx/default.conf /etc/nginx/sites-available/default
 
-EXPOSE 80
+# Copy supervisor config
+COPY conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-COPY docker/start.sh /start.sh
-RUN chmod +x /start.sh
+# Expose Render port
+EXPOSE 10000
 
-CMD ["/start.sh"]
+# Start services
+CMD ["/usr/bin/supervisord"]
