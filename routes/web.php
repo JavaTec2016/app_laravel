@@ -20,5 +20,4 @@ Route::view('/login', 'auth.login')
 Route::post('login', AuthLogin::class)
     ->middleware('guest');
 
-Route::resource('alumnos', AlumnoController::class)
-    ->middleware('auth');
+Route::resource('alumnos', AlumnoController::class);
