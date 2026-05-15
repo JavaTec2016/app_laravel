@@ -40,6 +40,8 @@ RUN composer install --no-dev --optimize-autoloader
 # Laravel permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
+RUN sed -i 's|listen = .*|listen = 9000|' /usr/local/etc/php-fpm.d/zz-docker.conf
+
 # Copy nginx config
 COPY conf/nginx/default.conf /etc/nginx/sites-available/default
 
@@ -48,6 +50,5 @@ COPY conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose Render port
 EXPOSE 10000
-
 # Start services
 CMD ["/usr/bin/supervisord"]
