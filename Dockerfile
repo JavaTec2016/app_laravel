@@ -51,4 +51,4 @@ COPY conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Expose Render port
 EXPOSE 10000
 # Start services
-CMD ["/start.sh"]
+CMD ["./start.sh"]
