@@ -1,29 +1,43 @@
-FROM tangramor/nginx-php8-fpm:latest
+FROM php:8.2-fpm AS base
 
-# Copy app files into the expected webroot
-COPY . /var/www/html
+# Install system dependencies & PHP extensions
+RUN apt-get update && apt-get install -y \
+    nginx \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    zip unzip \
+  && docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Run composer and cache artisan configs at BUILD time
-# (avoids runtime php permission issues on Render)
+# Copy app and install dependencies at BUILD time
+COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
 
-# Image config
-ENV SKIP_COMPOSER 1
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+  && chmod -R 755 /var/www/html/storage \
+  && chmod -R 755 /var/www/html/bootstrap/cache
 
-# Laravel config
-ENV APP_ENV production
-ENV APP_DEBUG false
-ENV LOG_CHANNEL stderr
+# Cache at build time (requires APP_KEY etc — skip if you don't have them at build time)
+# RUN php artisan config:cache
+# RUN php artisan route:cache
+# RUN php artisan view:cache
 
-ENV COMPOSER_ALLOW_SUPERUSER 1
+# Nginx config
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
 CMD ["/start.sh"]

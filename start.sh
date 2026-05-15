@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
-# Exit on error
-composer install --no-dev --optimize-autoloader
-npm install --omit=dev
-npm run build
+set -e
+
+echo "Running migrations..."
+php artisan migrate --force
+
+echo "Caching config..."
+php artisan config:cache
+
+echo "Caching routes..."
+php artisan route:cache
+
+echo "Starting php-fpm..."
+mkdir -p /run/php
+php-fpm -D
+
+echo "Starting nginx..."
+nginx -g "daemon off;"
