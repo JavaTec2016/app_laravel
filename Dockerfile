@@ -1,9 +1,4 @@
-
-
-FROM richarvey/nginx-php-fpm:latest
-USER www-data
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chmod -R 775 /var/www/html/storage
+FROM richarvey/nginx-php-fpm:1.7.2
 
 COPY . .
 
