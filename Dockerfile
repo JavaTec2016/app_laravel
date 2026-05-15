@@ -41,7 +41,7 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 RUN sed -i 's|listen = .*|listen = 9000|' /usr/local/etc/php-fpm.d/zz-docker.conf
-
+RUN chmod +x ./start.sh
 # Copy nginx config
 COPY conf/nginx/default.conf /etc/nginx/sites-available/default
 
