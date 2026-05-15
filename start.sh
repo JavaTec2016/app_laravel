@@ -1,18 +1,10 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/sh
+echo "ESTART"
+php artisan config:clear
+php artisan cache:clear
 
-echo "Running migrations..."
-php artisan migrate --force
-
-echo "Caching config..."
 php artisan config:cache
-
-echo "Caching routes..."
 php artisan route:cache
-
-echo "Starting php-fpm..."
-mkdir -p /run/php
-php-fpm -D
-
-echo "Starting nginx..."
-nginx -g "daemon off;"
+php artisan view:cache
+php artisan migrate --force
+exec /usr/bin/supervisord
